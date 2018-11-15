@@ -45,7 +45,10 @@ const appReducer = (state = initialState, action) => {
 
 		case t.CART_RECEIVE:
 			return Object.assign({}, state, { cart: action.cart });
-
+		case t.CART_MISC_ITEMS_RECEIVE:
+			const nextCart = Object.assign({}, state.cart);
+			nextCart.misc_items = action.misc_items;
+			return Object.assign({}, state, { cart: nextCart });
 		case t.SHIPPING_METHODS_REQUEST:
 			return Object.assign({}, state, { loadingShippingMethods: true });
 

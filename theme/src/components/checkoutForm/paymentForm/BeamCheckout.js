@@ -27,6 +27,14 @@ class BeamButton extends React.Component {
 		};
 
 		this.checkWeb3();
+		this.resetTransactionFees();
+	}
+
+	resetTransactionFees() {
+		this.props.dispatch({
+			type: 'CART_MISC_ITEMS_RECEIVE',
+			misc_items: []
+		});
 	}
 
 	checkWeb3() {
@@ -89,9 +97,20 @@ class BeamButton extends React.Component {
 				return response.json();
 			})
 			.then(data => {
+				const transactionFee = web3.utils.fromWei(new web3.utils.BN(data.fee));
+				this.props.dispatch({
+					type: 'CART_MISC_ITEMS_RECEIVE',
+					misc_items: [
+						{
+							name: 'Transaction Fee',
+							price: transactionFee
+						}
+					]
+				});
+
 				this.setState({
 					hasSufficientBalance: true,
-					transactionFee: web3.utils.fromWei(new web3.utils.BN(data.fee))
+					transactionFee
 				});
 			});
 	};
@@ -235,8 +254,7 @@ class BeamButton extends React.Component {
 					disabled={processing || !hasSufficientBalance}
 					className={buttonClasses}
 				>
-					Pay with Beam (fee: {transactionFee.toString()}
-					)!
+					Pay with Beam
 				</button>
 			</div>
 		);

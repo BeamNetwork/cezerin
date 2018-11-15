@@ -115,7 +115,14 @@ const OrderSummary = props => {
 							{helper.formatCurrency(cart.discount_total, settings)}
 						</div>
 					)}
-
+					{(cart.misc_items || []).map(charge => (
+						<React.Fragment>
+							<div className="column is-7">{charge.name}</div>
+							<div className="column is-5 has-text-right price">
+								{helper.formatCurrency(charge.price, settings)}
+							</div>
+						</React.Fragment>
+					))}
 					<div className="column is-12">
 						<hr className="separator" />
 					</div>
