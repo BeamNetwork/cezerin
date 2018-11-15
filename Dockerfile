@@ -8,13 +8,15 @@ WORKDIR /usr/src/app
 # where available (npm@5+)
 COPY package*.json ./
 
-RUN npm install --only=production
+RUN npm install
 
 # Bundle app source
 COPY . .
 
 # Define environment variable
 #ENV NODE_ENV production
+
+RUN npm run build
 
 EXPOSE 3000
 

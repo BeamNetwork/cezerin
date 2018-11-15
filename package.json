@@ -140,5 +140,8 @@
   "engines": {
     "node": "^8.0.0",
     "npm": "^5.0.0"
+  },
+  "devDependencies": {
+    "websocket": "^1.0.28"
   }
 }
