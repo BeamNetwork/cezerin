@@ -5,6 +5,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import Web3 from 'web3';
+import { connect } from 'react-redux';
 
 const HUB_REQ_HEADERS = {
 	'Content-Type': 'application/json',
@@ -13,7 +14,7 @@ const HUB_REQ_HEADERS = {
 
 let web3 = null;
 
-export default class BeamButton extends React.Component {
+class BeamButton extends React.Component {
 	constructor(props) {
 		super(props);
 
@@ -52,7 +53,7 @@ export default class BeamButton extends React.Component {
 		}
 	}
 
-	checkAvailableBalance() {
+	checkAvailableBalance = async () => {
 		const { formSettings } = this.props;
 		const { hasWeb3, account } = this.state;
 
@@ -60,7 +61,7 @@ export default class BeamButton extends React.Component {
 			console.log('No web3!');
 		}
 
-		fetch(`${formSettings.hubUrl}/api/v1/receipts/${account}`)
+		await fetch(`${formSettings.hubUrl}/api/v1/receipts/${account}`)
 			.then(response => {
 				if (response.status !== 200) {
 					console.log('No state channel found!');
@@ -93,7 +94,7 @@ export default class BeamButton extends React.Component {
 					transactionFee: web3.utils.fromWei(new web3.utils.BN(data.fee))
 				});
 			});
-	}
+	};
 
 	executePayment = () => {
 		const { formSettings, onPayment } = this.props;
@@ -177,11 +178,48 @@ export default class BeamButton extends React.Component {
 			timeLockDuration
 		};
 
-		return web3.eth.sign(prefixed, receipt.signer0).then(signature => {
-			newReceipt.sig0 = signature;
+		const msgParams = [
+			{
+				type: 'string',
+				name: 'Order Summary',
+				value: this.props.cartItems
+					.map(
+						item => `${item.name}
+					(${item.variant_name})`
+					)
+					.join('\n')
+			},
+			{
+				type: 'string',
+				name: 'sigHash',
+				value: sigHash
+			}
+		];
 
-			return newReceipt;
+		const signTypedPromise = new Promise((resolve, reject) => {
+			web3.currentProvider.sendAsync(
+				{
+					method: 'eth_signTypedData',
+					params: [msgParams, receipt.signer0],
+					from: receipt.signer0
+				},
+				(err, { result: signature }) => {
+					if (err) {
+						reject(err);
+					} else {
+						newReceipt.sig0 = signature;
+						resolve(newReceipt);
+					}
+				}
+			);
 		});
+		return signTypedPromise;
+
+		//return web3.eth.sign(prefixed, receipt.signer0).then(signature => {
+		//newReceipt.sig0 = signature;
+
+		//return newReceipt;
+		//});
 	}
 
 	render() {
@@ -214,3 +252,10 @@ BeamButton.propTypes = {
 	}).isRequired,
 	onPayment: PropTypes.func.isRequired
 };
+
+const mapStateToProps = state => {
+	return {
+		cartItems: state.app.cart.items
+	};
+};
+export default connect(mapStateToProps)(BeamButton);
